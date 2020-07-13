@@ -5,10 +5,11 @@ LLC=llc
 OBJCOPY=riscv64-unknown-elf-objcopy
 LDS=src/lds/k210.lds
 LIBS=
-CFLAGS=-Wall -O0 -T$(LDS) -mabi=lp64d -march=rv64g
-CFLAGS+=-ffreestanding -nostartfiles -nostdinc -static -mcmodel=medany
+CFLAGS= -Wall -O0 -T$(LDS) -mabi=lp64d -march=rv64g
+CFLAGS+=-ffreestanding -nostartfiles -static -mcmodel=medany
 ASM=$(wildcard asm/*.S)
 ALL_SRCS=$(wildcard src/*.cpp)
+HEADERS=$(wildcard src/*.h)
 OUTPUT_DIR=objs/
 OUT=os
 OUT_BIN=os.bin
@@ -16,7 +17,8 @@ OUT_BIN=os.bin
 
 all: $(OUT) $(OUT_BIN)
 
-$(OUT): $(ASM) Makefile $(OUTPUT_S) $(ALL_SRCS) $(LDS)
+
+$(OUT): $(ASM) Makefile $(OUTPUT_S) $(ALL_SRCS) $(LDS) $(HEADERS)
 	$(CC) $(CFLAGS) -o $@ $(ASM) $(ALL_SRCS) $(LIBS)
 
 $(OUT_BIN): $(OUT)

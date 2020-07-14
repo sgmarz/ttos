@@ -1,12 +1,20 @@
 # boot.S
 # bootloader for SoS
+# Stephen Marz
+# 8 February 2019
 
 # Disable generation of compressed instructions.
 .option norvc
 
+# Define a .text.start section. The .text.start is put at the
+# starting address so that the entry _start is put at the RISC-V
+# address 0x8000_0000.
 .section .text.start
+
+# Execution starts here.
 .global _start
 _start:
+
 	# Disable linker instruction relaxation for the `la` instruction below.
 	# This disallows the assembler from assuming that `gp` is already initialized.
 	# This causes the value stored in `gp` to be calculated from `pc`.
@@ -36,8 +44,8 @@ _start:
 	# The stack grows from bottom to top, so we put the stack pointer
 	# to the very end of the stack range.
 	la		sp, _sp0
-	la		tp, _tp0
 	la		ra, 4f
+	la		tp, _tp0
 	# Setting `mstatus` register:
 	# 0b01 << 11: Machine's previous protection mode is 2 (MPP=2).
 	li		t0, 0b11 << 11 | (1 << 13)
@@ -45,19 +53,26 @@ _start:
 	# Do not allow interrupts while running kinit
 	csrw	mie, zero
 	# Machine's exception program counter (MEPC) is set to `kinit`.
-	la		t1, main
+	la		t1, kinit
 	csrw	mepc, t1
+	# We use mret here so that the mstatus register is properly updated.
 	mret
 3:
-	# This is the non-zero hart
+	# The stack grows from bottom to top, so we put the stack pointer
+	# to the very end of the stack range.
 	la		sp, _sp1
-	la		tp, _tp1
 	la		ra, 4f
+	la		tp, _tp1
+	# Setting `mstatus` register:
+	# 0b01 << 11: Machine's previous protection mode is 2 (MPP=2).
 	li		t0, 0b11 << 11 | (1 << 13)
 	csrw	mstatus, t0
+	# Do not allow interrupts while running kinit
 	csrw	mie, zero
-	la		t1, 4f
+	# Machine's exception program counter (MEPC) is set to `kinit`.
+	la		t1, kinit
 	csrw	mepc, t1
+	# We use mret here so that the mstatus register is properly updated.
 	mret
 4:
 	# wfi = wait for interrupt. This is a hint to the harts to shut everything needed

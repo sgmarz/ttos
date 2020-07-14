@@ -9,16 +9,14 @@ MEMORY
    * Memory with CPU cache.
    *6M CPU SRAM
    */
-  ram (wxa!ri) : ORIGIN = 0x80000000, LENGTH = (6 * 1024 * 1024)
+  ram (wxa) : ORIGIN = 0x80000000, LENGTH = (6 * 1024 * 1024)
   /*
    * Memory without CPU cache
    * 6M CPU SRAM
   */
-  ram_nocache (wxa!ri) : ORIGIN = 0x40000000, LENGTH = (6 * 1024 * 1024)
+  ram_nocache (wxa) : ORIGIN = 0x40000000, LENGTH = (6 * 1024 * 1024)
 }
 
-PROVIDE( _rom_start  = ORIGIN(rom) );
-PROVIDE( _rom_end    = ORIGIN(rom) + LENGTH(rom) );
 PROVIDE( _ram_start  = ORIGIN(ram) );
 PROVIDE( _ram_end    = ORIGIN(ram) + LENGTH(ram) );
 PROVIDE( _io_start   = 0x40000000 );

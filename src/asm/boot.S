@@ -43,17 +43,10 @@ _start:
 	# to the very end of the stack range.
 	la		sp, _sp0
 	la		ra, 4f
-	# Setting `mstatus` register:
-	# 0b01 << 11: Machine's previous protection mode is 2 (MPP=2).
 	li		t0, 0b11 << 11
 	csrw	mstatus, t0
-	# Do not allow interrupts while running kinit
-	csrw	mie, zero
-	# Machine's exception program counter (MEPC) is set to `kinit`.
-	csrr	a0, mhartid
 	la		t1, kinit
 	csrw	mepc, t1
-	# We use mret here so that the mstatus register is properly updated.
 	mret
 4:
 	# wfi = wait for interrupt. This is a hint to the harts to shut everything needed

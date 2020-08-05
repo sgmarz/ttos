@@ -28,7 +28,7 @@ macro_rules! print
 {
 	($($args:tt)+) => ({
 			use core::fmt::Write;
-			let _ = write!(crate::drivers::uart::Uart::new(), $($args)+);
+			let _ = write!(crate::drivers::uart::Uart, $($args)+);
 			});
 }
 #[macro_export]
@@ -88,32 +88,32 @@ fn rust_switch_to_user(frame: usize) -> ! {
 	}
 }
 
-pub fn get_hartid() -> usize {
-	let ret: usize;
-	unsafe {
-		asm!("csrr {x}, mhartid", x = out(reg) ret);
-	}
-	ret
-}
-
 // ///////////////////////////////////
 // / ENTRY POINT
 // ///////////////////////////////////
 #[no_mangle]
-extern "C" fn kinit(hart: usize) {
+extern "C" fn kinit() {
 	drivers::uart::Uart::init();
-	println!("UART was initialized on hart {}.", hart);
-	while hart == 0 {
+	println!("I'm here running 0x{:08x}", zalc as usize);
+	loop {
 		let r = drivers::uart::Uart::get();
-		match r {
-			'\r' => println!(),
-			'\0' => {},
-			_ => print!("{}", r),
+		if r != 0 {
+			let c = r as char;
+			match c {
+				'\r' => println!(),
+				'o' => {
+					println!("you pressed it!");
+				}
+				_ => print!("{}", c),
+			}
 		}
 	}
 }
 
+fn zalc() {
+	println!("ZALC\n");
+}
+
 pub mod kmem;
 pub mod drivers;
-
 

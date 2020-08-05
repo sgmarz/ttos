@@ -10,7 +10,7 @@ MEMORY
 
 PROVIDE( _ram_start  = ORIGIN(ram) );
 PROVIDE( _ram_end    = ORIGIN(ram) + LENGTH(ram) );
-PROVIDE( _stack_size = 1 << 15 );
+PROVIDE( _stack_size = 1 << 22 );
 
 
 /*
@@ -42,6 +42,7 @@ ENTRY(_start)
 PHDRS
 {
   ram      PT_LOAD;
+  bss      PT_NULL;
 }
 
 /*
@@ -187,7 +188,7 @@ SECTIONS
 
     . = ALIGN(8);
     PROVIDE( _ebss = ABSOLUTE(.) );
-  } >ram AT>ram :ram
+  } >ram AT>ram :bss
 
   PROVIDE( _tls_data = ABSOLUTE(.) );
   /*
@@ -212,7 +213,7 @@ SECTIONS
     *(.tbss .tbss.*)
     *(.gnu.linkonce.tb.*)
     KEEP( *(.tbss.end) )
-  } >ram AT>ram :ram
+  } >ram AT>ram :bss
 
   /*
    * End of uninitalized data segement
@@ -225,7 +226,7 @@ SECTIONS
   . = ALIGN(64);
   PROVIDE( _end = ABSOLUTE(.) );
   /* Leave 2 holes for stack & TLS, the size can set in kconfig */
-  PROVIDE( _heap_start = ABSOLUTE(.) + _stack_size * 8 );
+  PROVIDE( _heap_start = ABSOLUTE(.) + _stack_size);
   PROVIDE( _sp0 = _end );
 
   /* Heap end is at the end of memory, the memory size can set in kconfig */

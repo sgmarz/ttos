@@ -3,7 +3,7 @@
 // 2-Aug-2020
 
 use core::fmt::Write;
-
+use core::ptr::{read_volatile, write_volatile};
 const UART_BASE: usize = 0x1001_0000;
 
 // #[repr(usize)]
@@ -21,7 +21,8 @@ const UART_BASE: usize = 0x1001_0000;
 //     r as usize
 // }
 
-pub struct Uart {
+pub struct Uart;
+struct UartRegs {
     tx_data: u32,
     rx_data: u32,
     tx_ctrl: u32,
@@ -31,62 +32,34 @@ pub struct Uart {
     div: u32,
 }
 impl Uart {
-    pub fn new() -> Self {
-        Self {
-            tx_data: 0,
-            rx_data: 0,
-            tx_ctrl: 0,
-            rx_ctrl: 0,
-            ie: 0,
-            ip: 0,
-            div: 0,
-        }
-    }
     pub fn init() {
-        let u = UART_BASE as *mut Uart;
         unsafe {
-            (*u).ie = 0;
-            (*u).div = 4340;
-            (*u).tx_ctrl = 1;
-            (*u).rx_ctrl = 1;
+            let u = &mut *(UART_BASE as *mut UartRegs);
+            write_volatile(&mut u.div, 4340);
+            write_volatile(&mut u.tx_ctrl, 1);
+            write_volatile(&mut u.rx_ctrl, 1);
+            write_volatile(&mut u.ie, 0);
         }
-        // let ub = UART_BASE as *mut u32;
-        // unsafe {
-        //     ub.add(reg(UartRegs::Ie)).write_volatile(0);
-        //     ub.add(reg(UartRegs::Div)).write_volatile(4340);
-        //     ub.add(reg(UartRegs::TxCtrl)).write_volatile(1);
-        //     ub.add(reg(UartRegs::RxCtrl)).write_volatile(1);
-        // }
+        
     }
-    pub fn put(c: char) {
-        let u = UART_BASE as *mut Uart;
+    pub fn put(c: u8) {
         unsafe {
-            loop {
-                let r = (*u).tx_data >> 31 == 1;
-                if !r {
-                    (*u).tx_data = c as u32;
-                    break;
-                }
+            let u = &mut *(UART_BASE as *mut UartRegs);
+            while read_volatile(&mut u.tx_data) >> 31 == 1 {
+
             }
+            write_volatile(&mut u.tx_data, c as u32);
         }
-        // let ub = UART_BASE as *mut u32;
-        // unsafe {
-        //     while ub.add(reg(UartRegs::TxData)).read_volatile() >> 31 == 1 {
-        //     }
-        //     ub.add(reg(UartRegs::TxData)).write_volatile(c as u32);
-        // }
     }
-    pub fn get() -> char {
-        // let ub = UART_BASE as *mut u32;
-        let u = UART_BASE as *mut Uart;
+    pub fn get() -> u8 {
         unsafe {
-            // let ret = ub.add(reg(UartRegs::RxData)).read_volatile();
-            let ret = (*u).rx_data;
-            if ret >> 31 == 1 {
-                0 as char
+            let u = &mut *(UART_BASE as *mut UartRegs);
+            let r = read_volatile(&mut u.rx_data);
+            if r >> 31 == 1 {
+                0
             }
             else {
-                ret as u8 as char
+                r as u8
             }
         }
     }
@@ -95,7 +68,7 @@ impl Uart {
 impl Write for Uart {
     fn write_str(&mut self, s: &str) -> Result<(), core::fmt::Error> {
         for i in s.bytes() {
-            Self::put(i as char);
+            Self::put(i);
         }
         Ok(())
     }

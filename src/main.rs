@@ -28,7 +28,7 @@ macro_rules! print
 {
 	($($args:tt)+) => ({
 			use core::fmt::Write;
-			// let _ = write!(crate::uart::Uart::new(0x1000_0000), $($args)+);
+			let _ = write!(crate::drivers::uart::Uart::new(), $($args)+);
 			});
 }
 #[macro_export]
@@ -100,17 +100,20 @@ pub fn get_hartid() -> usize {
 // / ENTRY POINT
 // ///////////////////////////////////
 #[no_mangle]
-extern "C" fn kinit() {
-	let hart = get_hartid();
-	// rust_switch_to_user(sched::schedule());
-	// switch_to_user will not return, so we should never get here
-	if hart == 0 {
-		// Bootstrap hart
+extern "C" fn kinit(hart: usize) {
+	drivers::uart::Uart::init();
+	println!("UART was initialized on hart {}.", hart);
+	while hart == 0 {
+		let r = drivers::uart::Uart::get();
+		match r {
+			'\r' => println!(),
+			'\0' => {},
+			_ => print!("{}", r),
+		}
 	}
-	
 }
 
 pub mod kmem;
-
+pub mod drivers;
 
 

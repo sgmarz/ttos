@@ -1,5 +1,6 @@
 #!/bin/sh
 
+cargo clean
 cargo build --release
 if [ $? -ne 0 ]; then
 	echo "Cargo build failed."

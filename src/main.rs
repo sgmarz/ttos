@@ -20,6 +20,8 @@ global_asm!(include_str!("asm/boot.S"));
 // #[macro_use]
 extern crate alloc;
 
+use core::ptr::{read_volatile, write_volatile};
+
 // ///////////////////////////////////
 // / RUST MACROS
 // ///////////////////////////////////
@@ -92,15 +94,21 @@ fn rust_switch_to_user(frame: usize) -> ! {
 // / ENTRY POINT
 // ///////////////////////////////////
 #[no_mangle]
-extern "C" fn kinit() {
+extern "C" fn kinit(hart: usize) {
 	drivers::uart::Uart::init();
-	println!("I'm here running 0x{:08x}", zalc as usize);
+	println!("Hart {}", hart);
 	loop {
 		let r = drivers::uart::Uart::get();
 		if r != 0 {
 			let c = r as char;
 			match c {
 				'\r' => println!(),
+				'1' => {
+					println!("IPI to hart 1");
+					let clint = crate::drivers::clint::Clint::get_mut();
+					clint.write_msip(1, 1);
+					println!("Time is {}", clint.read_mtime());
+				}
 				'o' => {
 					println!("you pressed it!");
 				}
@@ -110,10 +118,17 @@ extern "C" fn kinit() {
 	}
 }
 
-fn zalc() {
-	println!("ZALC\n");
+fn ipi() {
+	println!("I'm here in the ipi!");
+}
+
+fn delay(amt: usize) {
+	for _ in 0..amt*2000000 {
+		unsafe { asm!("nop"); }
+	}
 }
 
 pub mod kmem;
 pub mod drivers;
+pub mod platform;
 

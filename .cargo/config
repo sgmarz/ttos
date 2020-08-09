@@ -1,6 +1,6 @@
 [build]
 target = "riscv64gc-unknown-none-elf"
-rustflags = ['-Clink-arg=-T./u540.lds']
+rustflags = ['-Clink-arg=-T./k210.lds']
 
 [target.riscv64gc-unknown-none-elf]
 runner = "/opt/riscv/bin/qemu-system-riscv64 -d guest_errors,unimp -bios none -machine sifive_u -smp 5 -m 8G -cpu sifive-u54 -nographic -serial mon:stdio -kernel "

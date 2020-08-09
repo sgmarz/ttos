@@ -27,21 +27,24 @@ _start:
 	# SATP register.
 	# Any hardware threads (hart) that are not bootstrapping
 	# need to wait for an IPI
-	csrr	t0, mhartid
-	bnez	t0, 4f
+	# csrw	mie, zero
+	# csrr	t0, mhartid
+	# bnez	t0, 2f
 
 	# Set all bytes in the BSS section to zero.
-	la 		a0, _bss
-	la		a1, _ebss
-	bgeu	a0, a1, 2f
-1:
-	sd		zero, (a0)
-	addi	a0, a0, 8
-	bltu	a0, a1, 1b
-2:
-	# The stack grows from bottom to top, so we put the stack pointer
-	# to the very end of the stack range.
+	# la 		a0, _bss
+	# la		a1, _ebss
+	# bgeu	a0, a1, 2f
+# 1:
+	# sd		zero, (a0)
+	# addi	a0, a0, 8
+	# bltu	a0, a1, 1b
+# 2:
+	# This is the boot hart
 	la		sp, _sp0
+	csrr	a0, mhartid
+	slli	t3, a0, 12
+	sub		sp, sp, t3
 	la		ra, 4f
 	li		t0, 0b11 << 11
 	csrw	mstatus, t0

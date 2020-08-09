@@ -5,7 +5,7 @@
  */
 MEMORY
 {
-  ram (rwxa) : ORIGIN = 0x80000000, LENGTH = 8M
+  ram (rwxa) : ORIGIN = 0x80000000, LENGTH = 4M
 }
 
 PROVIDE( _ram_start  = ORIGIN(ram) );

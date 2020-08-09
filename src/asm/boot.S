@@ -23,24 +23,6 @@ _start:
 .option norelax
 	la		gp, __global_pointer$
 .option pop
-	# SATP should be zero, but let's make sure. Each HART has its own
-	# SATP register.
-	# Any hardware threads (hart) that are not bootstrapping
-	# need to wait for an IPI
-	# csrw	mie, zero
-	# csrr	t0, mhartid
-	# bnez	t0, 2f
-
-	# Set all bytes in the BSS section to zero.
-	# la 		a0, _bss
-	# la		a1, _ebss
-	# bgeu	a0, a1, 2f
-# 1:
-	# sd		zero, (a0)
-	# addi	a0, a0, 8
-	# bltu	a0, a1, 1b
-# 2:
-	# This is the boot hart
 	la		sp, _sp0
 	csrr	a0, mhartid
 	slli	t3, a0, 12
@@ -51,10 +33,9 @@ _start:
 	la		t1, kinit
 	csrw	mepc, t1
 	mret
+
+
 4:
-	# wfi = wait for interrupt. This is a hint to the harts to shut everything needed
-	# down. However, the RISC-V specification allows for wfi to do nothing. Anyway,
-	# with QEMU, this will save some CPU!
 	wfi
 	j		4b
 
